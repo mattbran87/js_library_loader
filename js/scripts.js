@@ -1,6 +1,4 @@
 jQuery( document ).ready(function() {
-    console.log( "ready!" );
-
     // only allow one checkbox per group.
     jQuery('.library-form-group').each(function(i, elm) {
     	var children = jQuery(this).find('input:checkbox');
