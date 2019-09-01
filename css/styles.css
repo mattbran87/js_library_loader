@@ -1,6 +1,25 @@
+.left {
+    float: left;
+    width: 47%;
+    margin-left: 1em;
+}
+
+.right {
+    float: right;
+    width: 47%;
+    margin-right: 1em;
+}
+
+.right, .left {
+    width: 47%;
+    margin: 0;
+    clear: inherit;
+}
+
 .library-form-group {
     margin: 15px 10px;
     outline: 1px solid #ccc;
+    outline-style: outset;
 }
 
 .section-heading-wrapper {
@@ -21,4 +40,9 @@ h1.section-heading {
 .library-form-group .form-type-checkbox {
     display: inline-block;
     padding: 0 1em 0 0;
+}
+
+input#edit-submit {
+    float: left;
+    clear: both;
 }

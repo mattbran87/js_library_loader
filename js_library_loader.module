@@ -61,7 +61,11 @@ function js_library_loader_form($form, &$form_state) {
         ->execute()
         ->fetchAll();
 
-  $settings_config = unserialize($last_record[0]->settings_config);
+  if (!empty($last_record)) {
+    $settings_config = unserialize($last_record[0]->settings_config);
+  } else {
+    $settings_config = [];
+  }
 
   $library_path = drupal_get_path('module', 'js_library_loader') . "/libraries";
   $directories = glob($library_path . '/*' , GLOB_ONLYDIR);
@@ -80,6 +84,13 @@ function js_library_loader_form($form, &$form_state) {
     $description = $vendor_file['description'];
     $cdn = $vendor_file['CDN'];
 
+    $float = NULL;
+    if ($directory_key % 2 == 0) {
+      $float = 'left';
+    } else {
+      $float = 'right';
+    }
+
     $file_scan_storage[$directory_key] = array(
       'js_files' => $libraries_scan,
       'vendor_file' => $vendor_file
@@ -93,6 +104,7 @@ function js_library_loader_form($form, &$form_state) {
       '#attributes' => array(
         'class' => array(
           'library-form-group',
+          $float
         ),
         'id' => array(
           $directory_name
@@ -129,7 +141,6 @@ function js_library_loader_form($form, &$form_state) {
     }
   }
 
-  // hidden data to be passed at submit
   $form['file_data'] = array(
     '#type' => 'hidden',
     '#value' => array(
