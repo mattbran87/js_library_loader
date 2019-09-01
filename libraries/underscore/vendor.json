@@ -1,0 +1,11 @@
+{
+  "libraryName":"underscore",
+  "libraryUrl":"https://underscorejs.org/",
+  "libraryDocumentationUrl":"https://underscorejs.org",
+  "CDN":{
+    "option":false,
+    "url":"",
+    "version":""
+  },
+  "description":""
+}

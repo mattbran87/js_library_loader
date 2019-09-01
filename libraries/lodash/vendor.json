@@ -1,0 +1,11 @@
+{
+  "libraryName":"Lodash",
+  "libraryUrl":"https://lodash.com/",
+  "libraryDocumentationUrl":"https://lodash.com/docs",
+  "CDN":{
+    "option":true,
+    "url":"https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.15/lodash.min.js",
+    "version":"4.17.15"
+  },
+  "description":""
+}

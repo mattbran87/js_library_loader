@@ -1,0 +1,36 @@
+<?php
+
+function js_library_loader_schema(){
+  $schema = array();
+  $schema['js_library_loader'] = array(
+      'description' => 'The table for storing the JS library data.',
+      'fields' => array(
+          'id' => array(
+            'description' => 'The primary identifier.',
+            'type' => 'serial',
+            'not null' => TRUE,
+            'unsigned' => TRUE,
+          ),
+          'settings_config' => array(
+            'type' => 'blob',
+            'size' => 'normal', // normal / big
+            'not null' => FALSE,
+            'description' => t('Settings from the config page.'),
+          ),
+          'block_content' => array(
+            'type' => 'blob',
+            'size' => 'normal', // normal / big
+            'not null' => FALSE,
+            'description' => 'Content for block in page load.',
+          ),
+      ),
+      'primary key' => array('id'),
+  );
+  return $schema;
+}
+
+function js_library_loader_update_7001() {
+  $schema = js_library_loader_schema();
+  if(!db_table_exists('js_library_loader'))
+    db_create_table('js_library_loader', $schema['js_library_loader']);
+}

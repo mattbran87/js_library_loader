@@ -1,0 +1,11 @@
+{
+  "libraryName":"Sugar",
+  "libraryUrl":"https://sugarjs.com/",
+  "libraryDocumentationUrl":"https://sugarjs.com/docs/",
+  "CDN":{
+    "option":false,
+    "url":"",
+    "version":""
+  },
+  "description":""
+}

@@ -1,0 +1,24 @@
+.library-form-group {
+    margin: 15px 10px;
+    outline: 1px solid #ccc;
+}
+
+.section-heading-wrapper {
+    background: #f8f8f8;
+    height: 100%;
+    padding: 5px 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+h1.section-heading {
+    color: #555;
+}
+
+.library-container {
+    padding: 10px 15px;
+}
+
+.library-form-group .form-type-checkbox {
+    display: inline-block;
+    padding: 0 1em 0 0;
+}

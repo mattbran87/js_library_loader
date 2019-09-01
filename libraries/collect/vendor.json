@@ -1,0 +1,11 @@
+{
+  "libraryName":"Collect",
+  "libraryUrl":"https://collect.js.org/",
+  "libraryDocumentationUrl":"https://collect.js.org/api.html",
+  "CDN":{
+    "option":true,
+    "url":"https://cdnjs.cloudflare.com/ajax/libs/collect.js/4.16.5/collect.js",
+    "version":"4.16.5"
+  },
+  "description":"This is a description"
+}

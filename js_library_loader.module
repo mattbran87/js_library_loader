@@ -1,0 +1,214 @@
+<?php
+/*
+*
+*
+* js_library_loader
+*/
+module_load_include('inc', 'js_library_loader', 'includes/functions');
+
+/**
+ * Implements hook_menu().
+ */
+function js_library_loader_block_info() {
+  $blocks['js_library_loader'] = array(
+    'info' => t('JS Library Loader'),
+  );
+
+  return $blocks;
+}
+
+function js_library_loader_block_view($delta = '') {
+  switch ($delta) {
+    case 'js_library_loader':
+      $block['subject'] = t('JS Library Loader');
+      // add logic here to query the saved settings for module
+      $last_record = db_select('js_library_loader', 'n')
+            ->fields('n')
+            ->orderBy('id', 'DESC')
+            ->execute()
+            ->fetchAll();
+
+      $block_content = unserialize($last_record[0]->block_content);
+
+      $block['content'] = $block_content;
+      break;
+
+    default:
+      // code...
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function js_library_loader_menu() {
+  $items['admin/config/js_library_loader'] = array(
+    'title' => 'Configure JS Library Loader',
+    'description' => 'Configuration JS Library Loader module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('js_library_loader_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+function js_library_loader_form($form, &$form_state) {
+  // dpm($form);
+  // dpm($form_state);
+  $last_record = db_select('js_library_loader', 'n')
+        ->fields('n')
+        ->orderBy('id', 'DESC')
+        ->execute()
+        ->fetchAll();
+
+  $settings_config = unserialize($last_record[0]->settings_config);
+
+  $library_path = drupal_get_path('module', 'js_library_loader') . "/libraries";
+  $directories = glob($library_path . '/*' , GLOB_ONLYDIR);
+  $file_scan_storage = [];
+
+  $form = array();
+  $form['#attached']['css'][] = drupal_get_path('module', 'js_library_loader') . '/css/styles.css';
+  $form['#attached']['js'][] = drupal_get_path('module', 'js_library_loader') . '/js/scripts.js';
+
+  foreach ($directories as $directory_key => $directory) {
+    $libraries_scan = file_scan_directory($directory, '/.*\.js$/');
+    $vendor_file = json_decode(file_get_contents($directory.'/vendor.json'), TRUE);
+    $library_name = $vendor_file['libraryName'];
+    $library_url = $vendor_file['libraryUrl'];
+    $library_docs_url = $vendor_file['libraryDocumentationUrl'];
+    $description = $vendor_file['description'];
+    $cdn = $vendor_file['CDN'];
+
+    $file_scan_storage[$directory_key] = array(
+      'js_files' => $libraries_scan,
+      'vendor_file' => $vendor_file
+    );
+
+    $directory_name = ucfirst($library_name);
+
+    $form[$directory_name] = array(
+      '#type' => 'container',
+      '#weight' => 0,
+      '#attributes' => array(
+        'class' => array(
+          'library-form-group',
+        ),
+        'id' => array(
+          $directory_name
+        ),
+      ),
+    );
+    $form[$directory_name]['heading'] = array(
+      '#markup' => '<div class="section-heading-wrapper">
+      <h1 class="section-heading">'. $directory_name . ' - <a href="' . $library_docs_url . '" target="_blank">Documentation</a>' . '</h1>
+      <p class="description">'. $description .'</p></div>'
+    );
+    $form[$directory_name]["library"] = array(
+      '#type' => 'container',
+      '#weight' => 0,
+      '#attributes' => array(
+        'class' => array(
+          'library-container',
+        ),
+      ),
+    );
+    foreach ($libraries_scan as $file_key => $file) {
+      $form[$directory_name]["library"][$file->name] = array(
+        '#type' => 'checkbox',
+        '#title' => $file->name,
+        '#default_value' => (in_array($file->name, $settings_config) ? 1 : 0)
+      );
+    }
+    if ($cdn["option"] == TRUE) {
+      $form[$directory_name]["library"]["cdn_" . $library_name] = array(
+        '#type' => 'checkbox',
+        '#title' => "CDN" . (isset($cdn["version"]) ? " - v" . $cdn["version"] : ""),
+        '#default_value' => (in_array("cdn_" . $library_name, $settings_config) ? 1 : 0)
+      );
+    }
+  }
+
+  // hidden data to be passed at submit
+  $form['file_data'] = array(
+    '#type' => 'hidden',
+    '#value' => array(
+      'library_path' => $library_path,
+      'directories' => $directories,
+      'file_scans' => $file_scan_storage,
+    )
+  );
+
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Submit'));
+
+  return $form;
+}
+
+function js_library_loader_form_submit($form, &$form_state) {
+  // dpm($form);
+  // dpm($form_state);
+  $library_path = $form_state['values']['file_data']['library_path'];
+  $directories = $form_state['values']['file_data']['directories'];
+  $file_scans = $form_state['values']['file_data']['file_scans'];
+
+  $files_to_load = [];
+
+  foreach ($form_state['values'] as $key => $value) {
+    if ($value === 1) {
+      foreach ($file_scans as $scan_key => $file_array) {
+        $js_files = $file_array['js_files'];
+        $vendor_file = $file_array['vendor_file'];
+        if ($vendor_file['CDN']['option']) {
+          $library_name = $vendor_file['libraryName'];
+          if (preg_match('/cdn/i', $key) && preg_match('/'. $library_name .'/i', $key)) {
+            $files_to_load[$key] = array(
+              'type' => 'cdn',
+              'file_path' => $vendor_file['CDN']['url']
+            );
+            continue;
+          }
+        }
+        if (isset($js_files)) {
+          foreach ($js_files as $js_file_key => $js_file) {
+            if ($js_file->name == $key) {
+              $files_to_load[$key] = array(
+                'type' => 'file',
+                'file_path' => $js_file->uri
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  $file_list = [];
+  $script_blob = '';
+
+  foreach ($files_to_load as $key => $value) {
+    array_push($file_list, $key);
+    $script = '<script type="text/javascript" src="'. $value['file_path'] .'"></script>';
+    $script_blob .= $script;
+  }
+
+  $delete_records = db_select('js_library_loader', 'n')
+        ->fields('n')
+        ->orderBy('id', 'DESC')
+        ->execute()
+        ->fetchAll();
+
+  if (!empty($delete_records)) {
+    foreach ($delete_records as $key => $record) {
+      $num_deleted = db_delete('js_library_loader')
+        ->condition('id', $record->id)
+        ->execute();
+    }
+  }
+
+  $cTable = db_insert('js_library_loader')
+    ->fields(array('settings_config' => serialize($file_list),  'block_content' => serialize($script_blob)))
+    ->execute();
+}

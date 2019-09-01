@@ -1,0 +1,11 @@
+{
+  "libraryName":"Moment",
+  "libraryUrl":"https://momentjs.com/",
+  "libraryDocumentationUrl":"https://momentjs.com/docs/",
+  "CDN":{
+    "option":true,
+    "url":"https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js",
+    "version":"2.24.0"
+  },
+  "description":""
+}

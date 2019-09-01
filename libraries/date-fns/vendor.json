@@ -1,0 +1,11 @@
+{
+  "libraryName":"Date-fns",
+  "libraryUrl":"https://date-fns.org/",
+  "libraryDocumentationUrl":"https://date-fns.org/docs/Getting-Started",
+  "CDN":{
+    "option":false,
+    "url":"",
+    "version":""
+  },
+  "description":""
+}

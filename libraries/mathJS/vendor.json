@@ -1,0 +1,11 @@
+{
+  "libraryName":"MathJS",
+  "libraryUrl":"https://mathjs.org/",
+  "libraryDocumentationUrl":"https://mathjs.org/docs/index.html",
+  "CDN":{
+    "option":false,
+    "url":"",
+    "version":""
+  },
+  "description":""
+}
