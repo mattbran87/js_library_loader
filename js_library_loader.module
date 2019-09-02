@@ -39,7 +39,7 @@ function js_library_loader_block_view($delta = '') {
  * Implements hook_menu().
  */
 function js_library_loader_menu() {
-  $items['admin/config/js_library_loader'] = array(
+  $items['admin/config/development/js_library_loader'] = array(
     'title' => 'Configure JS Library Loader',
     'description' => 'Configuration JS Library Loader module',
     'page callback' => 'drupal_get_form',

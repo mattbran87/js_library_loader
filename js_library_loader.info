@@ -3,4 +3,4 @@ description = This module allows users to select from a list libraries and load 
 core = 7.x
 
 ; NEW LINE
-configure = admin/config/js_library_loader
+configure = admin/config/development/js_library_loader
