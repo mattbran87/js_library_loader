@@ -12,7 +12,6 @@ function js_library_loader_block_info() {
   $blocks['js_library_loader'] = array(
     'info' => t('JS Library Loader'),
   );
-
   return $blocks;
 }
 
@@ -20,7 +19,6 @@ function js_library_loader_block_view($delta = '') {
   switch ($delta) {
     case 'js_library_loader':
       $block['subject'] = t('JS Library Loader');
-      // add logic here to query the saved settings for module
       $last_record = db_select('js_library_loader', 'n')
             ->fields('n')
             ->orderBy('id', 'DESC')
@@ -30,10 +28,6 @@ function js_library_loader_block_view($delta = '') {
       $block_content = unserialize($last_record[0]->block_content);
 
       $block['content'] = $block_content;
-      break;
-
-    default:
-      // code...
       break;
   }
   return $block;
@@ -145,8 +139,8 @@ function js_library_loader_form($form, &$form_state) {
     '#type' => 'hidden',
     '#value' => array(
       'library_path' => $library_path,
-      'directories' => $directories,
-      'file_scans' => $file_scan_storage,
+      'directories' => json_encode($directories),
+      'file_scans' => json_encode($file_scan_storage),
     )
   );
 
@@ -157,8 +151,8 @@ function js_library_loader_form($form, &$form_state) {
 
 function js_library_loader_form_submit($form, &$form_state) {
   $library_path = $form_state['values']['file_data']['library_path'];
-  $directories = $form_state['values']['file_data']['directories'];
-  $file_scans = $form_state['values']['file_data']['file_scans'];
+  $directories = json_decode($form_state['values']['file_data']['directories'], TRUE);
+  $file_scans = json_decode($form_state['values']['file_data']['file_scans'], TRUE);
 
   $files_to_load = [];
 
@@ -179,10 +173,10 @@ function js_library_loader_form_submit($form, &$form_state) {
         }
         if (isset($js_files)) {
           foreach ($js_files as $js_file_key => $js_file) {
-            if ($js_file->name == $key) {
+            if ($js_file['name'] == $key) {
               $files_to_load[$key] = array(
                 'type' => 'file',
-                'file_path' => $js_file->uri
+                'file_path' => $js_file['uri']
               );
               continue;
             }
@@ -218,4 +212,6 @@ function js_library_loader_form_submit($form, &$form_state) {
   $cTable = db_insert('js_library_loader')
     ->fields(array('settings_config' => serialize($file_list),  'block_content' => serialize($script_blob)))
     ->execute();
+
+  drupal_set_message('Configuration updated.');
 }
