@@ -23,7 +23,7 @@ The primary function of this module is to make loading JavaScript libraries an e
 * In the new directory, add the main file that the library will be loading from.
 * In the new directory, add a file called vendor.json. This file contains the configuration rules for the new library.
 * Follow the JSON structure below to configure the library. It must have a libraryName and the CDN -> option must be set to true or false. If CDN -> option is set to true it must be given a URL.
-*After the library has been added to the directory and the vendor.json configured the library is ready to select on the module config page at /admin/config/js_library_loader.
+* After the library has been added to the directory and the vendor.json configured the library is ready to select on the module config page at /admin/config/js_library_loader.
 ```javascript
 // vendor.json
 {
