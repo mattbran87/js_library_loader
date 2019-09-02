@@ -1,7 +1,7 @@
 <?php
-/*
-*
-*
+/**
+* @file
+* Module allows users to manage what libraries and version is being loaded in page block throughout application.
 * js_library_loader
 */
 
@@ -19,12 +19,14 @@ function js_library_loader_block_view($delta = '') {
   switch ($delta) {
     case 'js_library_loader':
       $block['subject'] = t('JS Library Loader');
+      // Search for last record in database. This should be the only record in the database.
       $last_record = db_select('js_library_loader', 'n')
             ->fields('n')
             ->orderBy('id', 'DESC')
             ->execute()
             ->fetchAll();
 
+      // unserialize the blob from database that contains the stored script elements and load them into the block.
       $block_content = unserialize($last_record[0]->block_content);
 
       $block['content'] = $block_content;
@@ -49,26 +51,34 @@ function js_library_loader_menu() {
 }
 
 function js_library_loader_form($form, &$form_state) {
+  // Search for last record in database. This should be the only record in the database.
   $last_record = db_select('js_library_loader', 'n')
         ->fields('n')
         ->orderBy('id', 'DESC')
         ->execute()
         ->fetchAll();
 
+  // if there is a record, unserialize the first record's settings_config blob in array. 1st record is most recent in table. Else create an empty array.
+  // Settings Config is used to store user settings from the module config page.
   if (!empty($last_record)) {
     $settings_config = unserialize($last_record[0]->settings_config);
   } else {
     $settings_config = [];
   }
 
+  // Get the current directories from the libraries directory in the module.
   $library_path = drupal_get_path('module', 'js_library_loader') . "/libraries";
   $directories = glob($library_path . '/*' , GLOB_ONLYDIR);
   $file_scan_storage = [];
 
+  // Begin building form
+  // Add CSS and JS
   $form = array();
   $form['#attached']['css'][] = drupal_get_path('module', 'js_library_loader') . '/css/styles.css';
   $form['#attached']['js'][] = drupal_get_path('module', 'js_library_loader') . '/js/scripts.js';
 
+  // Scan for each file in each directory.
+  // Unpack the values from the from the vendor.json file.
   foreach ($directories as $directory_key => $directory) {
     $libraries_scan = file_scan_directory($directory, '/.*\.js$/');
     $vendor_file = json_decode(file_get_contents($directory.'/vendor.json'), TRUE);
@@ -78,6 +88,7 @@ function js_library_loader_form($form, &$form_state) {
     $description = $vendor_file['description'];
     $cdn = $vendor_file['CDN'];
 
+    // determine where the element should appear on config page and apply the appropriate class.
     $float = NULL;
     if ($directory_key % 2 == 0) {
       $float = 'left';
@@ -85,6 +96,7 @@ function js_library_loader_form($form, &$form_state) {
       $float = 'right';
     }
 
+    // store the scanned files in and array to be stored in hiddent element and passed to the hook_form_submit function.
     $file_scan_storage[$directory_key] = array(
       'js_files' => $libraries_scan,
       'vendor_file' => $vendor_file
@@ -119,6 +131,7 @@ function js_library_loader_form($form, &$form_state) {
         ),
       ),
     );
+    // create and element for each file in the directory.
     foreach ($libraries_scan as $file_key => $file) {
       $form[$directory_name]["library"][$file->name] = array(
         '#type' => 'checkbox',
@@ -126,6 +139,7 @@ function js_library_loader_form($form, &$form_state) {
         '#default_value' => (in_array($file->name, $settings_config) ? 1 : 0)
       );
     }
+    // Add option for CDN if vendor.json has specified.
     if ($cdn["option"] == TRUE) {
       $form[$directory_name]["library"]["cdn_" . $library_name] = array(
         '#type' => 'checkbox',
@@ -135,6 +149,7 @@ function js_library_loader_form($form, &$form_state) {
     }
   }
 
+  // store file_data in hidden form element and pass to hook_form_submit. Prevents repeating work in submit function.
   $form['file_data'] = array(
     '#type' => 'hidden',
     '#value' => array(
@@ -150,12 +165,14 @@ function js_library_loader_form($form, &$form_state) {
 }
 
 function js_library_loader_form_submit($form, &$form_state) {
+  // unpack file data
   $library_path = $form_state['values']['file_data']['library_path'];
   $directories = json_decode($form_state['values']['file_data']['directories'], TRUE);
   $file_scans = json_decode($form_state['values']['file_data']['file_scans'], TRUE);
 
   $files_to_load = [];
 
+  // iterate through form values and determine what has been selected. Comapare selected elements to stored file_data and determine if user selected a file or CDN. Add user selected values to files_to_load array.
   foreach ($form_state['values'] as $key => $value) {
     if ($value === 1) {
       foreach ($file_scans as $scan_key => $file_array) {
@@ -189,12 +206,14 @@ function js_library_loader_form_submit($form, &$form_state) {
   $file_list = [];
   $script_blob = '';
 
+  // build script elements and store them in script_blob variable. Add file names to file_list. These values are to be stored in database.
   foreach ($files_to_load as $key => $value) {
     array_push($file_list, $key);
     $script = '<script type="text/javascript" src="'. $value['file_path'] .'"></script>';
     $script_blob .= $script;
   }
 
+  // get previous records in table and delete them.
   $delete_records = db_select('js_library_loader', 'n')
     ->fields('n')
     ->orderBy('id', 'DESC')
@@ -209,6 +228,7 @@ function js_library_loader_form_submit($form, &$form_state) {
     }
   }
 
+  // insert new values into table.
   $cTable = db_insert('js_library_loader')
     ->fields(array('settings_config' => serialize($file_list),  'block_content' => serialize($script_blob)))
     ->execute();
